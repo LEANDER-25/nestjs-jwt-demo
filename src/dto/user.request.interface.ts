@@ -1,11 +1,11 @@
-interface UserLogin {
+class UserLogin {
   username: string;
   password: string;
 }
 
-interface UserRegister extends UserLogin {
+class UserRegister extends UserLogin {
   age?: number;
   roles: string[];
 }
 
-export { UserLogin, UserRegister }
+export { UserLogin, UserRegister };

@@ -6,14 +6,14 @@ import {
 
 export abstract class AbstractModel {
   @PrimaryGeneratedColumn('increment', { name: 'id', type: 'bigint' })
-  id: number;
+  id?: number;
 
   @CreateDateColumn({
     name: 'created_at',
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP(6)',
   })
-  createdAt: Date;
+  createdAt?: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
@@ -21,5 +21,5 @@ export abstract class AbstractModel {
     default: () => 'CURRENT_TIMESTAMP(6)',
     onUpdate: 'CURRENT_TIMESTAMP(6)',
   })
-  updatedAt: Date;
+  updatedAt?: Date;
 }

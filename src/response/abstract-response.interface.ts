@@ -1,6 +1,6 @@
 import { Metadata } from './metadata.interface';
 
-export interface AbstractResponse<T> {
+export class AbstractResponse<T> {
   metadata?: Metadata;
   data: T;
 }

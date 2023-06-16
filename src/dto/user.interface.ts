@@ -1,19 +1,19 @@
-interface User {
+class User {
   id: number;
   username: string;
   role: string[];
 }
 
-interface UserInfo extends User {
+class UserInfo extends User {
   fullname: string;
   age: number;
 }
 
-interface RefreshAccessToken extends User {
+class RefreshAccessToken extends User {
   accessToken: string;
 }
 
-interface UserLoginSuccess extends RefreshAccessToken {
+class UserLoginSuccess extends RefreshAccessToken {
   refreshToken: string;
 }
 

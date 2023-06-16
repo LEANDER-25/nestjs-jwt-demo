@@ -1,6 +1,6 @@
 import { EXCEPTION } from './enum.exception';
 
-interface ErrorResponse {
+class ErrorResponse {
   message: string;
   errorCode: string;
   description: string;

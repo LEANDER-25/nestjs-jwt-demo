@@ -10,6 +10,7 @@ import { Role } from './model/role.model';
 import { UserRole } from './model/user-role.model';
 import { UserInfo } from './model/user-info.model';
 import { User } from './model/user.model';
+import { UserSession } from './model/user-session.model';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { User } from './model/user.model';
       password: '12345678@a',
       database: 'nestjs_jwt_demo',
       synchronize: true,
-      entities: [User, UserInfo, UserRole, Role]
+      entities: [User, UserInfo, UserRole, Role, UserSession]
     }),
     AuthModule,
     UserModule,
