@@ -1,12 +1,12 @@
 class User {
   id: number;
   username: string;
-  role: string[];
+  roles: string[];
 }
 
 class UserInfo extends User {
-  fullname: string;
-  age: number;
+  fullname?: string;
+  age?: number;
 }
 
 class RefreshAccessToken extends User {

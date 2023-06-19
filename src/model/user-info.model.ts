@@ -5,10 +5,10 @@ import { User } from './user.model';
 @Entity('user_info')
 export class UserInfo extends AbstractModel {
   @Column({ name: 'fullname', type: 'varchar' })
-  fullname: string;
+  fullname?: string;
 
   @Column({ name: 'age', type: 'int2' })
-  age: number;
+  age?: number;
 
   @OneToOne(() => User)
   @JoinColumn({name: 'user_id'})

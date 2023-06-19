@@ -5,6 +5,7 @@ class ErrorResponse {
   errorCode: string;
   description: string;
   type: string;
+  hint?: string;
 }
 
 let BadUserCredential: ErrorResponse = {
@@ -22,4 +23,32 @@ let UserNotFound: ErrorResponse = {
   type: EXCEPTION[EXCEPTION.NOT_FOUND],
 };
 
-export { ErrorResponse, BadUserCredential, UserNotFound };
+let AgeNotAvailable: ErrorResponse = {
+  message: 'Age is smaller than 0',
+  errorCode: '0003',
+  description: 'Age of user must not smaller than zero',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
+let UsernameIsEmpty: ErrorResponse = {
+  message: 'Username is empty',
+  errorCode: '0004',
+  description: 'Input username must not be empty',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
+let PasswordIsEmpty: ErrorResponse = {
+  message: 'Password is empty',
+  errorCode: '0004',
+  description: 'Input password  must not be empty',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
+export {
+  ErrorResponse,
+  BadUserCredential,
+  UserNotFound,
+  AgeNotAvailable,
+  UsernameIsEmpty,
+  PasswordIsEmpty,
+};

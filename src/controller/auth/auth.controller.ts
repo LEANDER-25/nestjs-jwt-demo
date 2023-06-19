@@ -9,7 +9,7 @@ export class AuthController {
 
     constructor(private authService: AuthService) {}
 
-    @Post()
+    @Post('register')
     async register(@Body() payload: UserRegister): Promise<AbstractResponse<UserInfo>> {
         let userInfo = await this.authService.register(payload)
         return {

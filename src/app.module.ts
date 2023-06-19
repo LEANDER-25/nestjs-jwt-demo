@@ -22,7 +22,7 @@ import { UserSession } from './model/user-session.model';
       password: '12345678@a',
       database: 'nestjs_jwt_demo',
       synchronize: true,
-      entities: [User, UserInfo, UserRole, Role, UserSession]
+      entities: [User, UserInfo, UserRole, Role, UserSession],
     }),
     AuthModule,
     UserModule,
