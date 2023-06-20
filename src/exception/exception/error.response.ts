@@ -40,7 +40,14 @@ let UsernameIsEmpty: ErrorResponse = {
 let PasswordIsEmpty: ErrorResponse = {
   message: 'Password is empty',
   errorCode: '0004',
-  description: 'Input password  must not be empty',
+  description: 'Input password must not be empty',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
+let PasswordLengthIssue: ErrorResponse = {
+  message: 'Password is too long or too short',
+  errorCode: '0005',
+  description: 'Input password is greater than 16 chars or smaller than 8 chars',
   type: EXCEPTION[EXCEPTION.BAD_REQUEST],
 };
 
@@ -51,4 +58,5 @@ export {
   AgeNotAvailable,
   UsernameIsEmpty,
   PasswordIsEmpty,
+  PasswordLengthIssue
 };

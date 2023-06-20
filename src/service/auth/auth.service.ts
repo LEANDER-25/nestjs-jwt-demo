@@ -8,9 +8,11 @@ import { BadRequestException } from 'src/exception/exception/collection.exceptio
 import {
   AgeNotAvailable,
   PasswordIsEmpty,
+  PasswordLengthIssue,
   UsernameIsEmpty,
 } from 'src/exception/exception/error.response';
 import { Repository } from 'typeorm';
+import { StringUtils } from 'src/utils/collection-utils';
 
 @Injectable()
 export class AuthService {
@@ -71,7 +73,7 @@ export class AuthService {
   }
 }
 function checkUsername(username: string) {
-  if (username == undefined || username == null) {
+  if (StringUtils.isEmpty(username)) {
     throw new BadRequestException(UsernameIsEmpty);
   }
   // check username rules
@@ -82,7 +84,10 @@ function checkUsername(username: string) {
 }
 
 function checkPassword(password: string) {
-  if (password == undefined || password == null) {
+  if (StringUtils.isEmpty(password)) {
     throw new BadRequestException(PasswordIsEmpty);
+  }
+  if (password.length > 16 || password.length < 8) {
+    throw new BadRequestException(PasswordLengthIssue);
   }
 }
