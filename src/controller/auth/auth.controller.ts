@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { UserInfo } from 'src/dto/user.interface';
-import { UserRegister } from 'src/dto/user.request.interface';
+import { RefreshAccessToken, UserInfo } from 'src/dto/user.interface';
+import { UserLogin, UserRegister } from 'src/dto/user.request.interface';
 import { AbstractResponse } from 'src/response/abstract-response.interface';
 import { AuthService } from 'src/service/auth/auth.service';
 
@@ -17,4 +17,11 @@ export class AuthController {
         }
     }
 
+    @Post('login')
+    async login(@Body() payload: UserLogin): Promise<AbstractResponse<RefreshAccessToken>> {
+        let refreshAccessToken = await this.authService.login(payload);
+        return {
+            data: refreshAccessToken
+        }
+    }
 }

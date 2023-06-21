@@ -27,7 +27,7 @@ import { UserSession } from './model/user-session.model';
     AuthModule,
     UserModule,
   ],
-  controllers: [AppController, AuthController],
-  providers: [AppService, AuthService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}

@@ -8,7 +8,7 @@ class ErrorResponse {
   hint?: string;
 }
 
-let BadUserCredential: ErrorResponse = {
+const BadUserCredential: ErrorResponse = {
   message: 'Username or password or token is incorrect',
   errorCode: '0001',
   description:
@@ -16,38 +16,81 @@ let BadUserCredential: ErrorResponse = {
   type: EXCEPTION[EXCEPTION.BAD_CREDENTIAL],
 };
 
-let UserNotFound: ErrorResponse = {
+const UserNotFound: ErrorResponse = {
   message: 'User is not found',
   errorCode: '0002',
   description: 'User is not existed or can not find the user with condition',
   type: EXCEPTION[EXCEPTION.NOT_FOUND],
 };
 
-let AgeNotAvailable: ErrorResponse = {
+const AgeNotAvailable: ErrorResponse = {
   message: 'Age is smaller than 0',
   errorCode: '0003',
   description: 'Age of user must not smaller than zero',
   type: EXCEPTION[EXCEPTION.BAD_REQUEST],
 };
 
-let UsernameIsEmpty: ErrorResponse = {
+const UsernameIsEmpty: ErrorResponse = {
   message: 'Username is empty',
-  errorCode: '0004',
+  errorCode: '0004#0',
   description: 'Input username must not be empty',
   type: EXCEPTION[EXCEPTION.BAD_REQUEST],
 };
 
-let PasswordIsEmpty: ErrorResponse = {
+const UsernameLengthIssue: ErrorResponse = {
+  message: 'Username is too long or too short',
+  errorCode: '0004#1',
+  description: 'Input username is greater than 16 chars or smaller than 8 chars',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
+const UsernameContainingIllegalChar: ErrorResponse = {
+  message: 'Username is containing illegal characters',
+  errorCode: '0004#2',
+  description: 'Input username is containing illegal characters',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
+const PasswordIsEmpty: ErrorResponse = {
   message: 'Password is empty',
-  errorCode: '0004',
+  errorCode: '0005#0',
   description: 'Input password must not be empty',
   type: EXCEPTION[EXCEPTION.BAD_REQUEST],
 };
 
-let PasswordLengthIssue: ErrorResponse = {
+const PasswordLengthIssue: ErrorResponse = {
   message: 'Password is too long or too short',
-  errorCode: '0005',
-  description: 'Input password is greater than 16 chars or smaller than 8 chars',
+  errorCode: '0005#1',
+  description:
+    'Input password is greater than 16 chars or smaller than 8 chars',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
+const PasswordMissingDigit: ErrorResponse = {
+  message: 'Password is missing digits',
+  errorCode: '0005#2',
+  description: 'Password is missing digits. Check rules of password!',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
+const PasswordMissingLowerCase: ErrorResponse = {
+  message: 'Password is missing lower case characters',
+  errorCode: '0005#3',
+  description: 'Password is missing lower case characters. Check rules of password!',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
+const PasswordMissingUpperCase: ErrorResponse = {
+  message: 'Password is missing upper case characters',
+  errorCode: '0005#4',
+  description: 'Password is missing upper case characters. Check rules of password!',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
+const PasswordContainingIllegalChar: ErrorResponse = {
+  message: 'Password is containing illegal characters',
+  errorCode: '0005#5',
+  description: 'Password is containing illegal characters. Check rules of password!',
   type: EXCEPTION[EXCEPTION.BAD_REQUEST],
 };
 
@@ -57,6 +100,12 @@ export {
   UserNotFound,
   AgeNotAvailable,
   UsernameIsEmpty,
+  UsernameLengthIssue,
+  UsernameContainingIllegalChar,
   PasswordIsEmpty,
-  PasswordLengthIssue
+  PasswordLengthIssue,
+  PasswordMissingDigit,
+  PasswordMissingLowerCase,
+  PasswordMissingUpperCase,
+  PasswordContainingIllegalChar
 };

@@ -7,18 +7,32 @@ import * as bcrypt from 'bcrypt';
 import { BadRequestException } from 'src/exception/exception/collection.exception';
 import {
   AgeNotAvailable,
+  PasswordContainingIllegalChar,
   PasswordIsEmpty,
   PasswordLengthIssue,
+  PasswordMissingDigit,
+  PasswordMissingLowerCase,
+  PasswordMissingUpperCase,
+  UsernameContainingIllegalChar,
   UsernameIsEmpty,
+  UsernameLengthIssue,
 } from 'src/exception/exception/error.response';
-import { Repository } from 'typeorm';
-import { StringUtils } from 'src/utils/collection-utils';
+import { In, Repository } from 'typeorm';
+import { CollectionUtils, StringUtils } from 'src/utils/collection-utils';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Role } from 'src/model/role.model';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @InjectRepository(User)
     private userRepository: Repository<User>,
-    private userInfoRepository: Repository<UserInfo>,
+
+    @InjectRepository(UserInfoModel.UserInfo)
+    private userInfoRepository: Repository<UserInfoModel.UserInfo>,
+
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
   ) {}
   async register(payload: UserRegister): Promise<UserInfo> {
     let username = payload.username;
@@ -43,6 +57,26 @@ export class AuthService {
     console.log(newUser);
 
     newUser = await this.userRepository.save(newUser);
+
+    let assignedRoles: Role[] = [];
+    if (CollectionUtils.isEmpty(roles)) {
+      let readerRole = await this.roleRepository.findOne({
+        where: { roleName: 'READER' },
+      });
+      if (readerRole == undefined || readerRole == null) {
+        let readerRole_: Role = {
+          roleName: 'READER',
+        };
+        readerRole = await this.roleRepository.save(readerRole_);
+      }
+      assignedRoles.push(readerRole);
+    } else {
+      assignedRoles = await this.roleRepository.find({
+        where: {
+          roleName: In(roles),
+        },
+      });
+    }
 
     let newUserInfo: UserInfoModel.UserInfo = {
       user: newUser,
@@ -81,6 +115,12 @@ function checkUsername(username: string) {
   - limit in 16 chars
   - not contains spec chars (allow _.)
   */
+  if (username.length > 16 || username.length < 8) {
+    throw new BadRequestException(UsernameLengthIssue);
+  }
+  if (!username.match('^[^_.]+$')) {
+    throw new BadRequestException(UsernameContainingIllegalChar);
+  }
 }
 
 function checkPassword(password: string) {
@@ -89,5 +129,17 @@ function checkPassword(password: string) {
   }
   if (password.length > 16 || password.length < 8) {
     throw new BadRequestException(PasswordLengthIssue);
+  }
+  if (!password.match('\\d')) {
+    throw new BadRequestException(PasswordMissingDigit);
+  }
+  if (!password.match('[a-z]')) {
+    throw new BadRequestException(PasswordMissingLowerCase);
+  }
+  if (!password.match('[A-Z]')) {
+    throw new BadRequestException(PasswordMissingUpperCase);
+  }
+  if (!password.match('^[^_@$\\^&%.]+$')) {
+    throw new BadRequestException(PasswordContainingIllegalChar);
   }
 }
