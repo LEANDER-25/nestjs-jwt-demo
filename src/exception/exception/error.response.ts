@@ -94,6 +94,20 @@ const PasswordContainingIllegalChar: ErrorResponse = {
   type: EXCEPTION[EXCEPTION.BAD_REQUEST],
 };
 
+const RoleTypeNotFound: ErrorResponse = {
+  message: 'The role type(s) not found',
+  errorCode: '0006',
+  description: 'The role type(s) is not found in the system',
+  type: EXCEPTION[EXCEPTION.NOT_FOUND],
+};
+
+const PayloadEmpty: ErrorResponse = {
+  message: 'The payload is empty',
+  errorCode: '0007',
+  description: 'The request payload is empty',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
 export {
   ErrorResponse,
   BadUserCredential,
@@ -107,5 +121,7 @@ export {
   PasswordMissingDigit,
   PasswordMissingLowerCase,
   PasswordMissingUpperCase,
-  PasswordContainingIllegalChar
+  PasswordContainingIllegalChar,
+  RoleTypeNotFound,
+  PayloadEmpty
 };

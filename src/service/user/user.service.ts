@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { UserInfo } from 'src/dto/user.interface';
+import { UserInfoDto } from 'src/dto/user.interface';
 import { AbstractResponse } from 'src/response/abstract-response.interface';
 
 @Injectable()
 export class UserService {
-  private readonly users: UserInfo[] = [];
+  private readonly users: UserInfoDto[] = [];
 
-  async createCat(cat: UserInfo): Promise<AbstractResponse<UserInfo>> {
+  async createCat(cat: UserInfoDto): Promise<AbstractResponse<UserInfoDto>> {
     let length = this.users.length;
     let lastId = 0;
     if ((length = 0)) {
@@ -19,7 +19,7 @@ export class UserService {
     };
   }
 
-  async gets(): Promise<AbstractResponse<UserInfo[]>> {
+  async gets(): Promise<AbstractResponse<UserInfoDto[]>> {
     return {
       data: this.users,
     };

@@ -1,15 +1,15 @@
-class User {
+class UserDto {
   id: number;
   username: string;
   roles: string[];
 }
 
-class UserInfo extends User {
+class UserInfoDto extends UserDto {
   fullname?: string;
   age?: number;
 }
 
-class RefreshAccessToken extends User {
+class RefreshAccessToken extends UserDto {
   accessToken: string;
 }
 
@@ -17,4 +17,8 @@ class UserLoginSuccess extends RefreshAccessToken {
   refreshToken: string;
 }
 
-export { User, UserInfo, UserLoginSuccess, RefreshAccessToken };
+class UserToken extends UserDto {
+  mainRole: string;
+}
+
+export { UserDto, UserInfoDto, UserLoginSuccess, RefreshAccessToken, UserToken };

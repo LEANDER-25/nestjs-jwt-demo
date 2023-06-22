@@ -1,6 +1,6 @@
 export class CollectionUtils {
   static isEmpty<T>(arr: T[]): boolean {
-    if (arr == undefined || arr == null) {
+    if (ObjectUtils.isNull(arr)) {
       return true;
     }
     return arr.length == 0;
@@ -13,7 +13,7 @@ export class CollectionUtils {
 
 export class StringUtils {
   static isEmpty(str: string): boolean {
-    return str == undefined || str == null || str.length == 0;
+    return ObjectUtils.isNull(str) || str.length == 0;
   }
   static isNotEmpty(str: string): boolean {
     return !StringUtils.isEmpty(str);
@@ -27,5 +27,14 @@ export class StringUtils {
   }
   static strOrEmpty(str: string): string {
     return this.strOrDefault(str, '');
+  }
+}
+
+export class ObjectUtils {
+  static isNull<T>(obj: T): boolean {
+    return obj == undefined || obj == null;
+  }
+  static isNotNull<T>(obj: T): boolean {
+    return !this.isNull(obj)
   }
 }

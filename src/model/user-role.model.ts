@@ -7,7 +7,7 @@ export class UserRole extends AbstractModel {
   username: string;
 
   @Column({ name: 'role_name', type: 'varchar' })
-  role_name: string;
+  roleName: string;
 
   @Column({ name: 'is_main', type: 'boolean' })
   isMain: boolean;

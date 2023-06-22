@@ -1,0 +1,11 @@
+# port
+port: 8080
+
+security:
+  jwt:
+    # acces token expired in 30s
+    accessExp: 60000
+    # refresh token expired in 10d
+    refreshExp: 864000000
+    # secret key, random string
+    secretKey: PLkz1SCf5iB4cAum3esWdyv_FFPBHTnvRY

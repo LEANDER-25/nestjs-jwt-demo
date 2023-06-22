@@ -11,18 +11,34 @@ import { UserRole } from './model/user-role.model';
 import { UserInfo } from './model/user-info.model';
 import { User } from './model/user.model';
 import { UserSession } from './model/user-session.model';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import appConfig from 'src/config/configuration';
+import { type } from 'os';
+import { DataSource } from 'typeorm';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '12345678@a',
-      database: 'nestjs_jwt_demo',
-      synchronize: true,
-      entities: [User, UserInfo, UserRole, Role, UserSession],
+    ConfigModule.forRoot({ load: [appConfig] }),
+    // TypeOrmModule.forRoot({
+    //   type: 'postgres',
+    //   host: 'localhost',
+    //   port: 5432,
+    //   username: 'postgres',
+    //   password: '12345678@a',
+    //   database: 'nestjs_jwt_demo',
+    //   synchronize: true,
+    //   entities: [User, UserInfo, UserRole, Role, UserSession],
+    // }),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+
+      }),
+      dataSourceFactory: async (options) => {
+        const dataSource = await new DataSource(options).initialize();
+        return dataSource;
+      },
     }),
     AuthModule,
     UserModule,

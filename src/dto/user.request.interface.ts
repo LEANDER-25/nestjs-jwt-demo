@@ -5,7 +5,8 @@ class UserLogin {
 
 class UserRegister extends UserLogin {
   age?: number;
-  roles: string[];
+  assistRoles: string[];
+  mainRole: string;
 }
 
 export { UserLogin, UserRegister };
