@@ -33,7 +33,15 @@ import { DataSource } from 'typeorm';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-
+        type: 'postgres' as 'postgres',
+        host: configService.get<string>('database.host'),
+        port: configService.get<number>('database.port'),
+        username: configService.get<string>('database.username'),
+        password: configService.get<string>('database.password'),
+        schema: configService.get<string>('database.schema'),
+        database: configService.get<string>('database.databaseName'),
+        synchronize: true,
+        entities: [User, UserInfo, UserRole, Role, UserSession],
       }),
       dataSourceFactory: async (options) => {
         const dataSource = await new DataSource(options).initialize();

@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserSession } from 'src/model/user-session.model';
 import { User } from 'src/model/user.model';
+import { UUIDHelper } from 'src/utils/utils';
 import { Repository } from 'typeorm';
+import { UUID } from 'typeorm/driver/mongodb/bson.typings';
 
 @Injectable()
 export class SessionService {
@@ -63,17 +65,15 @@ export class SessionService {
     return true;
   }
 
-  async initAccessRight(user: User, refreshUUID: string): Promise<UserSession> {
-    let existed = await this.findSession(refreshUUID);
-    if (existed == null) {
-      return existed;
-    }
+  async initAccessRight(user: User): Promise<UserSession> {
+    let refreshUUID = 'SessionNo' + UUIDHelper.generate() + "D" + Date.now();
     let session: UserSession = {
       user,
       refreshUUID,
       isExpired: false,
       isActive: true,
     };
-    return await this.userSessionRepository.save(session);
+    // return await this.userSessionRepository.save(session);
+    return session;
   }
 }

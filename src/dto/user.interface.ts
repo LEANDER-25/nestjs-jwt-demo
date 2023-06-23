@@ -21,4 +21,8 @@ class UserToken extends UserDto {
   mainRole: string;
 }
 
-export { UserDto, UserInfoDto, UserLoginSuccess, RefreshAccessToken, UserToken };
+class AccessToken extends UserToken {
+  refreshUUID: string
+}
+
+export { UserDto, UserInfoDto, UserLoginSuccess, RefreshAccessToken, UserToken, AccessToken };

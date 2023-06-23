@@ -1,5 +1,4 @@
 database:
-  type: postgres
   host: localhost
   port: 5432
   databaseName: nestjs_jwt_demo

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  AccessToken,
   UserDto,
   UserInfoDto,
   UserLoginSuccess,
@@ -35,7 +36,9 @@ import { CollectionUtils, ObjectUtils, StringUtils } from 'src/utils/utils';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/model/role.model';
 import { UserRole } from 'src/model/user-role.model';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
+import { SessionService } from '../session/session.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -53,6 +56,10 @@ export class AuthService {
     private userRoleRepository: Repository<UserRole>,
 
     private jwtService: JwtService,
+
+    private sessionService: SessionService,
+
+    private configService: ConfigService,
   ) {}
 
   async register(payload: UserRegister): Promise<UserInfoDto> {
@@ -79,6 +86,7 @@ export class AuthService {
 
     let assignedRoles: Role[] = [];
     assignedRoles = await this.getMainRoles(mainRole, assignedRoles);
+    mainRole = assignedRoles[0].roleName;
 
     assignedRoles = await this.getAssistRoles(assistRoles, assignedRoles);
 
@@ -129,15 +137,17 @@ export class AuthService {
 
   protected async getMainRoles(mainRole: string, assignedRoles: Role[]) {
     if (StringUtils.isEmpty(mainRole)) {
+      const READER_ROLE = 'READER';
       let readerRole = await this.roleRepository.findOne({
-        where: { roleName: 'READER' },
+        where: { roleName: READER_ROLE },
       });
       if (ObjectUtils.isNull(readerRole)) {
         let readerRole_: Role = {
-          roleName: 'READER',
+          roleName: READER_ROLE,
         };
         readerRole = await this.roleRepository.save(readerRole_);
       }
+      mainRole = READER_ROLE;
       assignedRoles.push(readerRole);
     } else {
       assignedRoles = await this.roleRepository.find({
@@ -219,13 +229,14 @@ export class AuthService {
       where: { username: payload.username },
     });
     if (ObjectUtils.isNull(user)) {
+      console.log('Not found user');
       throw new BadCredentialException(BadUserCredential);
     }
     let isMatchPwd = await bcrypt.compare(payload.password, user.password);
     if (!isMatchPwd) {
+      console.log('Password not matched');
       throw new BadCredentialException(BadUserCredential);
     }
-
     let userRoles = await this.userRoleRepository.find({
       where: { username: payload.username },
     });
@@ -233,7 +244,6 @@ export class AuthService {
     if (CollectionUtils.isEmpty(userRoles)) {
       throw new InternalServerErrorException();
     }
-
     let roles = userRoles.map((e) => e.roleName);
     let mainRoles = userRoles
       .filter((e) => e.isMain == true)
@@ -246,18 +256,45 @@ export class AuthService {
     let userToken: UserToken = {
       id: user.id,
       username: user.username,
-      roles: roles,
+      roles,
       mainRole: mainRoles[0],
     };
 
-    let refreshToken = await this.jwtService.signAsync(userToken);
+    let newSession = await this.sessionService.initAccessRight(user);
+
+    let refreshUUID = newSession.refreshUUID;
+
+    let accessTokenPayload: AccessToken = {
+      ...userToken,
+      refreshUUID,
+    };
+
+    let jwtSignOption: JwtSignOptions = {
+      secret: this.configService.get<string>('security.jwt.secretKey'),
+      algorithm: 'HS256',
+    };
+    let refreshTokenSignOption: JwtSignOptions = {
+      ...jwtSignOption,
+      expiresIn: this.configService.get<string>('security.jwt.refreshExp'),
+    };
+    let accessTokenSignOption: JwtSignOptions = {
+      ...jwtSignOption,
+      expiresIn: this.configService.get<string>('security.jwt.accessExp'),
+      keyid: refreshUUID,
+    };
+    let refreshToken = await this.jwtService.signAsync(
+      userToken,
+      refreshTokenSignOption,
+    );
+    let accessToken = await this.jwtService.signAsync(
+      accessTokenPayload,
+      accessTokenSignOption,
+    );
 
     return {
-      id: 1,
-      refreshToken: '',
-      accessToken: '',
-      username: '',
-      roles: [],
+      ...userToken,
+      refreshToken,
+      accessToken,
     };
   }
 }
