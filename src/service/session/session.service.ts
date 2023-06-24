@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { AccountIsDisabled } from 'src/exception/exception/error.response';
 import { UserSession } from 'src/model/user-session.model';
 import { User } from 'src/model/user.model';
-import { UUIDHelper } from 'src/utils/utils';
+import { CollectionUtils, UUIDHelper } from 'src/utils/utils';
 import { Repository } from 'typeorm';
 import { UUID } from 'typeorm/driver/mongodb/bson.typings';
 
@@ -26,12 +27,22 @@ export class SessionService {
     return sessions[0];
   }
 
-  async isAvailableAccessible(refreshUUID: string): Promise<Boolean> {
-    let session = await this.findSession(refreshUUID);
-    if (session == null) {
-      return false;
+  async isAvailableAccessible(userId: number): Promise<Boolean> {
+    let user = await this.userRepository.findOne({ where: { id: userId } });
+    
+    if (!user.isActive) {
+      throw new ForbiddenException(AccountIsDisabled);
     }
-    return !session.isExpired && session.isActive;
+
+    let sessions = await this.userSessionRepository.find({
+      where: {
+        user,
+        isActive: true,
+        isExpired: false,
+      },
+    });
+
+    return CollectionUtils.isNotEmpty(sessions);
   }
 
   async revokeAllAccessRight(userId: number): Promise<Boolean> {
@@ -66,7 +77,7 @@ export class SessionService {
   }
 
   async initAccessRight(user: User): Promise<UserSession> {
-    let refreshUUID = 'SessionNo' + UUIDHelper.generate() + "D" + Date.now();
+    let refreshUUID = 'SessionNo' + UUIDHelper.generate() + 'D' + Date.now();
     let session: UserSession = {
       user,
       refreshUUID,

@@ -108,6 +108,13 @@ const PayloadEmpty: ErrorResponse = {
   type: EXCEPTION[EXCEPTION.BAD_REQUEST],
 };
 
+const AccountIsDisabled: ErrorResponse = {
+  message: 'The account is disabled',
+  errorCode: '0007',
+  description: 'The account is disabled. Contact to customer service for more detail!',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
 export {
   ErrorResponse,
   BadUserCredential,
@@ -123,5 +130,6 @@ export {
   PasswordMissingUpperCase,
   PasswordContainingIllegalChar,
   RoleTypeNotFound,
-  PayloadEmpty
+  PayloadEmpty,
+  AccountIsDisabled
 };

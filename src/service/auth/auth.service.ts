@@ -13,10 +13,12 @@ import * as bcrypt from 'bcrypt';
 import {
   BadCredentialException,
   BadRequestException,
+  ForbiddenException,
   InternalServerErrorException,
   NotFoundException,
 } from 'src/exception/exception/collection.exception';
 import {
+  AccountIsDisabled,
   AgeNotAvailable,
   BadUserCredential,
   PasswordContainingIllegalChar,
@@ -219,24 +221,34 @@ export class AuthService {
     if (ObjectUtils.isNull(payload)) {
       throw new BadRequestException(PayloadEmpty);
     }
+
     if (StringUtils.isEmpty(payload.username)) {
       throw new BadRequestException(UsernameIsEmpty);
     }
+
     if (StringUtils.isEmpty(payload.password)) {
       throw new BadRequestException(PasswordIsEmpty);
     }
+
     let user = await this.userRepository.findOne({
       where: { username: payload.username },
     });
+
     if (ObjectUtils.isNull(user)) {
       console.log('Not found user');
       throw new BadCredentialException(BadUserCredential);
     }
+
     let isMatchPwd = await bcrypt.compare(payload.password, user.password);
     if (!isMatchPwd) {
       console.log('Password not matched');
       throw new BadCredentialException(BadUserCredential);
     }
+
+    if (!user.isActive) {
+      throw new ForbiddenException(AccountIsDisabled);
+    }
+
     let userRoles = await this.userRoleRepository.find({
       where: { username: payload.username },
     });
@@ -264,7 +276,7 @@ export class AuthService {
 
     let refreshUUID = newSession.refreshUUID;
 
-    let accessTokenPayload: AccessToken = {
+    let refreshTokenPayload: AccessToken = {
       ...userToken,
       refreshUUID,
     };
@@ -280,14 +292,13 @@ export class AuthService {
     let accessTokenSignOption: JwtSignOptions = {
       ...jwtSignOption,
       expiresIn: this.configService.get<string>('security.jwt.accessExp'),
-      keyid: refreshUUID,
     };
     let refreshToken = await this.jwtService.signAsync(
-      userToken,
+      refreshTokenPayload,
       refreshTokenSignOption,
     );
     let accessToken = await this.jwtService.signAsync(
-      accessTokenPayload,
+      userToken,
       accessTokenSignOption,
     );
 

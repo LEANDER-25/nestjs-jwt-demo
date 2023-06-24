@@ -14,6 +14,6 @@ export class UserSession extends AbstractModel {
   isActive: boolean;
 
   @OneToOne(() => User)
-  @JoinColumn({ name: 'user-id' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 }

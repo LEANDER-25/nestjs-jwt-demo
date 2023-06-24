@@ -8,4 +8,7 @@ export class User extends AbstractModel {
 
   @Column({ name: 'password', type: 'varchar', nullable: false })
   password: string;
+
+  @Column({ name: 'is_active', type: 'boolean', default: true })
+  isActive?: boolean;
 }
