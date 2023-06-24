@@ -218,17 +218,7 @@ export class AuthService {
   }
 
   async login(payload: UserLogin): Promise<UserLoginSuccess> {
-    if (ObjectUtils.isNull(payload)) {
-      throw new BadRequestException(PayloadEmpty);
-    }
-
-    if (StringUtils.isEmpty(payload.username)) {
-      throw new BadRequestException(UsernameIsEmpty);
-    }
-
-    if (StringUtils.isEmpty(payload.password)) {
-      throw new BadRequestException(PasswordIsEmpty);
-    }
+    this.checkPayloadLegacy(payload);
 
     let user = await this.userRepository.findOne({
       where: { username: payload.username },
@@ -307,5 +297,19 @@ export class AuthService {
       refreshToken,
       accessToken,
     };
+  }
+
+  private checkPayloadLegacy(payload: UserLogin) {
+    if (ObjectUtils.isNull(payload)) {
+      throw new BadRequestException(PayloadEmpty);
+    }
+
+    if (StringUtils.isEmpty(payload.username)) {
+      throw new BadRequestException(UsernameIsEmpty);
+    }
+
+    if (StringUtils.isEmpty(payload.password)) {
+      throw new BadRequestException(PasswordIsEmpty);
+    }
   }
 }
