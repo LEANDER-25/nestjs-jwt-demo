@@ -9,4 +9,9 @@ class UserRegister extends UserLogin {
   mainRole: string;
 }
 
-export { UserLogin, UserRegister };
+class LogOutDto {
+  refreshToken: string;
+  password?: string;
+}
+
+export { UserLogin, UserRegister, LogOutDto };

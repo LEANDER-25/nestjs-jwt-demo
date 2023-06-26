@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { AbstractModel } from './abstract.model';
 import { User } from './user.model';
 
@@ -13,7 +13,7 @@ export class UserSession extends AbstractModel {
   @Column({name: 'is_active', type: 'boolean', default: 'true'})
   isActive: boolean;
 
-  @OneToOne(() => User)
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
 }

@@ -5,7 +5,6 @@ import { UserSession } from 'src/model/user-session.model';
 import { User } from 'src/model/user.model';
 import { CollectionUtils, UUIDHelper } from 'src/utils/utils';
 import { Repository } from 'typeorm';
-import { UUID } from 'typeorm/driver/mongodb/bson.typings';
 
 @Injectable()
 export class SessionService {
@@ -27,7 +26,7 @@ export class SessionService {
     return sessions[0];
   }
 
-  async isAvailableAccessible(userId: number): Promise<Boolean> {
+  async isAvailableAccess(userId: number, refreshUUID: string): Promise<Boolean> {
     let user = await this.userRepository.findOne({ where: { id: userId } });
     
     if (!user.isActive) {
@@ -36,12 +35,11 @@ export class SessionService {
 
     let sessions = await this.userSessionRepository.find({
       where: {
-        user,
+        refreshUUID,
         isActive: true,
         isExpired: false,
       },
     });
-
     return CollectionUtils.isNotEmpty(sessions);
   }
 
@@ -63,6 +61,7 @@ export class SessionService {
     });
 
     await this.userSessionRepository.save(sessions);
+    return true;
   }
 
   async revokeAccessRight(refreshUUID: string): Promise<Boolean> {
@@ -84,7 +83,7 @@ export class SessionService {
       isExpired: false,
       isActive: true,
     };
-    // return await this.userSessionRepository.save(session);
-    return session;
+    return await this.userSessionRepository.save(session);
+    // return session;
   }
 }

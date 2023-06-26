@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import {
-  AccessToken,
-  UserDto,
+  RefreshTokenPayload,
   UserInfoDto,
   UserLoginSuccess,
-  UserToken,
+  UserTokenPayload,
 } from 'src/dto/user.interface';
-import { UserLogin, UserRegister } from 'src/dto/user.request.interface';
+import {
+  LogOutDto,
+  UserLogin,
+  UserRegister,
+} from 'src/dto/user.request.interface';
 import { User } from 'src/model/user.model';
 import { UserInfo } from 'src/model/user-info.model';
 import * as bcrypt from 'bcrypt';
@@ -41,28 +44,34 @@ import { UserRole } from 'src/model/user-role.model';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { SessionService } from '../session/session.service';
 import { ConfigService } from '@nestjs/config';
+import { AbstractService } from '../abstract.service';
 
 @Injectable()
-export class AuthService {
+export class AuthService extends AbstractService {
   constructor(
     @InjectRepository(User)
-    private userRepository: Repository<User>,
+    protected userRepository: Repository<User>,
 
     @InjectRepository(UserInfo)
-    private userInfoRepository: Repository<UserInfo>,
+    protected userInfoRepository: Repository<UserInfo>,
 
     @InjectRepository(Role)
-    private readonly roleRepository: Repository<Role>,
+    protected readonly roleRepository: Repository<Role>,
 
     @InjectRepository(UserRole)
-    private userRoleRepository: Repository<UserRole>,
+    protected userRoleRepository: Repository<UserRole>,
 
-    private jwtService: JwtService,
+    protected jwtService: JwtService,
 
-    private sessionService: SessionService,
+    protected sessionService: SessionService,
 
-    private configService: ConfigService,
-  ) {}
+    protected configService: ConfigService,
+  ) {
+    super(configService);
+  }
+
+  protected readonly REFRESH_TOKEN_EXP_CONFIG = 'security.jwt.refreshExp';
+  protected readonly ACCESS_TOKEN_EXP_CONFIG = 'security.jwt.accessExp';
 
   async register(payload: UserRegister): Promise<UserInfoDto> {
     let username = payload.username;
@@ -188,7 +197,7 @@ export class AuthService {
     - limit in 16 chars
     - not contains spec chars (allow _.)
     */
-    if (username.length > 16 || username.length < 8) {
+    if (username.length > 16 || username.length <= 3) {
       throw new BadRequestException(UsernameLengthIssue);
     }
     if (!username.match('^[^_.]+$')) {
@@ -200,7 +209,7 @@ export class AuthService {
     if (StringUtils.isEmpty(password)) {
       throw new BadRequestException(PasswordIsEmpty);
     }
-    if (password.length > 16 || password.length < 8) {
+    if (password.length > 16 || password.length <= 8) {
       throw new BadRequestException(PasswordLengthIssue);
     }
     if (!password.match('\\d')) {
@@ -212,13 +221,13 @@ export class AuthService {
     if (!password.match('[A-Z]')) {
       throw new BadRequestException(PasswordMissingUpperCase);
     }
-    if (!password.match('^[^_@$\\^&%.]+$')) {
+    if (!password.match('^[0-9a-zA-Z^_@$\\^&%.]+$')) {
       throw new BadRequestException(PasswordContainingIllegalChar);
     }
   }
 
   async login(payload: UserLogin): Promise<UserLoginSuccess> {
-    this.checkPayloadLegacy(payload);
+    this.checkLoginPayload(payload);
 
     let user = await this.userRepository.findOne({
       where: { username: payload.username },
@@ -255,7 +264,7 @@ export class AuthService {
       throw new InternalServerErrorException();
     }
 
-    let userToken: UserToken = {
+    let userToken: UserTokenPayload = {
       id: user.id,
       username: user.username,
       roles,
@@ -266,23 +275,18 @@ export class AuthService {
 
     let refreshUUID = newSession.refreshUUID;
 
-    let refreshTokenPayload: AccessToken = {
+    let refreshTokenPayload: RefreshTokenPayload = {
       ...userToken,
       refreshUUID,
     };
+    let refreshTokenSignOption: JwtSignOptions = this.getJwtSignOption(
+      this.REFRESH_TOKEN_EXP_CONFIG,
+    );
 
-    let jwtSignOption: JwtSignOptions = {
-      secret: this.configService.get<string>('security.jwt.secretKey'),
-      algorithm: 'HS256',
-    };
-    let refreshTokenSignOption: JwtSignOptions = {
-      ...jwtSignOption,
-      expiresIn: this.configService.get<string>('security.jwt.refreshExp'),
-    };
-    let accessTokenSignOption: JwtSignOptions = {
-      ...jwtSignOption,
-      expiresIn: this.configService.get<string>('security.jwt.accessExp'),
-    };
+    let accessTokenSignOption: JwtSignOptions = this.getJwtSignOption(
+      this.ACCESS_TOKEN_EXP_CONFIG,
+    );
+
     let refreshToken = await this.jwtService.signAsync(
       refreshTokenPayload,
       refreshTokenSignOption,
@@ -299,7 +303,7 @@ export class AuthService {
     };
   }
 
-  private checkPayloadLegacy(payload: UserLogin) {
+  private checkLoginPayload(payload: UserLogin) {
     if (ObjectUtils.isNull(payload)) {
       throw new BadRequestException(PayloadEmpty);
     }
@@ -312,4 +316,55 @@ export class AuthService {
       throw new BadRequestException(PasswordIsEmpty);
     }
   }
+
+  async logout(payload: LogOutDto) {
+    if (
+      ObjectUtils.isNull(payload) ||
+      StringUtils.isEmpty(payload.refreshToken)
+    ) {
+      throw new BadRequestException(PayloadEmpty);
+    }
+
+    if (!payload.refreshToken.startsWith('Bearer')) {
+      throw new BadCredentialException(BadUserCredential);
+    }
+
+    payload.refreshToken = payload.refreshToken.substring(6).trim();
+
+    let refreshTokenSignOption = this.getJwtSignOption(
+      this.REFRESH_TOKEN_EXP_CONFIG,
+    );
+    let refreshTokenPayload: RefreshTokenPayload = null;
+    try {
+      refreshTokenPayload = await this.jwtService.verifyAsync(
+        payload.refreshToken,
+        refreshTokenSignOption,
+      );
+    } catch (ex) {
+      console.log(ex);
+      throw new BadCredentialException(BadUserCredential);
+    }
+    if (
+      ObjectUtils.isNull(refreshTokenPayload) ||
+      StringUtils.isEmpty(refreshTokenPayload.refreshUUID) ||
+      ObjectUtils.isNull(refreshTokenPayload.id)
+    ) {
+      throw new BadCredentialException(BadUserCredential);
+    }
+    let isAvailableAccess = await this.sessionService.isAvailableAccess(
+      refreshTokenPayload.id,
+      refreshTokenPayload.refreshUUID,
+    );
+    if (!isAvailableAccess) {
+      throw new BadCredentialException(BadUserCredential);
+    }
+    let result = await this.sessionService.revokeAccessRight(
+      refreshTokenPayload.refreshUUID,
+    );
+    if (!result) {
+      throw new BadCredentialException(BadUserCredential);
+    }
+  }
+
+  async logoutEverywhere() {}
 }

@@ -9,20 +9,17 @@ class UserInfoDto extends UserDto {
   age?: number;
 }
 
-class RefreshAccessToken extends UserDto {
-  accessToken: string;
+class UserLoginSuccess {
+  refreshToken?: string;
+  accessToken?: string
 }
 
-class UserLoginSuccess extends RefreshAccessToken {
-  refreshToken: string;
-}
-
-class UserToken extends UserDto {
+class UserTokenPayload extends UserDto {
   mainRole: string;
 }
 
-class AccessToken extends UserToken {
+class RefreshTokenPayload extends UserTokenPayload {
   refreshUUID: string
 }
 
-export { UserDto, UserInfoDto, UserLoginSuccess, RefreshAccessToken, UserToken, AccessToken };
+export { UserDto, UserInfoDto, UserLoginSuccess, UserTokenPayload, RefreshTokenPayload };
