@@ -1,26 +1,20 @@
 import { ConfigService } from '@nestjs/config';
 import { JwtSignOptions } from '@nestjs/jwt';
+import { TokenSetting } from 'src/config/token.setting';
 
 export abstract class AbstractService {
   constructor(protected configService: ConfigService) {}
-  getJwtSignOption(tokenTypeExpireTimeConfig: string) {
+  readonly tokenSetting = TokenSetting.getInstance();
+  getJwtSignOption(isRefresh: boolean): JwtSignOptions {
     let jwtSignOption: JwtSignOptions = {
-      secret: this.configService.get<string>('security.jwt.secretKey'),
+      secret: this.tokenSetting.secretKey,
       algorithm: 'HS256',
     };
-
-    //   let refreshTokenSignOption: JwtSignOptions = {
-    //     ...jwtSignOption,
-    //     expiresIn: this.configService.get<string>('security.jwt.refreshExp'),
-    //   };
-
-    //   let accessTokenSignOption: JwtSignOptions = {
-    //     ...jwtSignOption,
-    //     expiresIn: this.configService.get<string>('security.jwt.accessExp'),
-    //   };
     return {
       ...jwtSignOption,
-      expiresIn: this.configService.get<string>(tokenTypeExpireTimeConfig),
+      expiresIn: isRefresh
+        ? this.tokenSetting.refreshExp
+        : this.tokenSetting.accessExp,
     };
   }
 }

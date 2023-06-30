@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './module/auth/auth.module';
@@ -12,8 +12,16 @@ import { UserSession } from './model/user-session.model';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import appConfig from 'src/config/configuration';
 import { DataSource } from 'typeorm';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { HttpExceptionFilter } from './exception/advise.controller';
+import { AuthGuard } from './middleware/auth/auth.guard';
+import { JwtService } from '@nestjs/jwt';
+import { SessionService } from './service/session/session.service';
+import { UserRepository } from './repository/user.repository';
+import { UserSessionRepository } from './repository/user-session.repository';
+import { RoleRepository } from './repository/role.repository';
+import { UserInfoRepository } from './repository/user-info.repository';
+import { UserRoleRepository } from './repository/user-role.repository';
 
 @Module({
   imports: [
@@ -43,10 +51,21 @@ import { HttpExceptionFilter } from './exception/advise.controller';
   controllers: [AppController],
   providers: [
     AppService,
+    UserRepository,
+    UserRoleRepository,
+    UserSessionRepository,
+    UserInfoRepository,
+    RoleRepository,
+    JwtService,
+    SessionService,
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
-  ],
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ]
 })
 export class AppModule {}

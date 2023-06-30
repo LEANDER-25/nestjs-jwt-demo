@@ -36,42 +36,32 @@ import {
   UsernameIsEmpty,
   UsernameLengthIssue,
 } from 'src/exception/exception/error.response';
-import { In, Repository } from 'typeorm';
+import { In } from 'typeorm';
 import { CollectionUtils, ObjectUtils, StringUtils } from 'src/utils/utils';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/model/role.model';
 import { UserRole } from 'src/model/user-role.model';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { SessionService } from '../session/session.service';
 import { ConfigService } from '@nestjs/config';
 import { AbstractService } from '../abstract.service';
+import { UserRepository } from 'src/repository/user.repository';
+import { UserInfoRepository } from 'src/repository/user-info.repository';
+import { RoleRepository } from 'src/repository/role.repository';
+import { UserRoleRepository } from 'src/repository/user-role.repository';
 
 @Injectable()
 export class AuthService extends AbstractService {
   constructor(
-    @InjectRepository(User)
-    protected userRepository: Repository<User>,
-
-    @InjectRepository(UserInfo)
-    protected userInfoRepository: Repository<UserInfo>,
-
-    @InjectRepository(Role)
-    protected readonly roleRepository: Repository<Role>,
-
-    @InjectRepository(UserRole)
-    protected userRoleRepository: Repository<UserRole>,
-
+    protected userRepository: UserRepository,
+    protected userInfoRepository: UserInfoRepository,
+    protected roleRepository: RoleRepository,
+    protected userRoleRepository: UserRoleRepository,
     protected jwtService: JwtService,
-
     protected sessionService: SessionService,
-
     protected configService: ConfigService,
   ) {
     super(configService);
   }
-
-  protected readonly REFRESH_TOKEN_EXP_CONFIG = 'security.jwt.refreshExp';
-  protected readonly ACCESS_TOKEN_EXP_CONFIG = 'security.jwt.accessExp';
 
   async register(payload: UserRegister): Promise<UserInfoDto> {
     let username = payload.username;
@@ -275,24 +265,25 @@ export class AuthService extends AbstractService {
 
     let refreshUUID = newSession.refreshUUID;
 
+    let accessTokenPayload: RefreshTokenPayload = {
+      ...userToken,
+      refreshUUID: '(A)' + refreshUUID,
+    };
+
     let refreshTokenPayload: RefreshTokenPayload = {
       ...userToken,
       refreshUUID,
     };
-    let refreshTokenSignOption: JwtSignOptions = this.getJwtSignOption(
-      this.REFRESH_TOKEN_EXP_CONFIG,
-    );
+    let refreshTokenSignOption: JwtSignOptions = this.getJwtSignOption(true);
 
-    let accessTokenSignOption: JwtSignOptions = this.getJwtSignOption(
-      this.ACCESS_TOKEN_EXP_CONFIG,
-    );
+    let accessTokenSignOption: JwtSignOptions = this.getJwtSignOption(false);
 
     let refreshToken = await this.jwtService.signAsync(
       refreshTokenPayload,
       refreshTokenSignOption,
     );
     let accessToken = await this.jwtService.signAsync(
-      userToken,
+      accessTokenPayload,
       accessTokenSignOption,
     );
 
@@ -331,9 +322,7 @@ export class AuthService extends AbstractService {
 
     payload.refreshToken = payload.refreshToken.substring(6).trim();
 
-    let refreshTokenSignOption = this.getJwtSignOption(
-      this.REFRESH_TOKEN_EXP_CONFIG,
-    );
+    let refreshTokenSignOption = this.getJwtSignOption(true);
     let refreshTokenPayload: RefreshTokenPayload = null;
     try {
       refreshTokenPayload = await this.jwtService.verifyAsync(

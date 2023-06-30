@@ -3,17 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AccountIsDisabled } from 'src/exception/exception/error.response';
 import { UserSession } from 'src/model/user-session.model';
 import { User } from 'src/model/user.model';
+import { UserSessionRepository } from 'src/repository/user-session.repository';
+import { UserRepository } from 'src/repository/user.repository';
 import { CollectionUtils, UUIDHelper } from 'src/utils/utils';
-import { Repository } from 'typeorm';
 
 @Injectable()
 export class SessionService {
   constructor(
-    @InjectRepository(UserSession)
-    private userSessionRepository: Repository<UserSession>,
-
-    @InjectRepository(User)
-    private userRepository: Repository<User>,
+    private userSessionRepository: UserSessionRepository,
+    private userRepository: UserRepository,
   ) {}
 
   async findSession(refreshUUID: string): Promise<UserSession> {
