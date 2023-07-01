@@ -1,11 +1,8 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
-import { Observable } from 'rxjs';
 import { IgnoreTokenCheckUrlCollection } from 'src/config/ignoreurls.setting';
 import { TokenSetting } from 'src/config/token.setting';
 import { RefreshTokenPayload } from 'src/dto/user.interface';
-import { BadCredentialException } from 'src/exception/exception/collection.exception';
-import { BadUserCredential } from 'src/exception/exception/error.response';
 import { SessionService } from 'src/service/session/session.service';
 import { ObjectUtils, StringUtils } from 'src/utils/utils';
 
@@ -15,9 +12,7 @@ export class AuthGuard implements CanActivate {
     private jwtService: JwtService,
     private sessionService: SessionService,
   ) {}
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     console.log('Welcome to Auth Guard! At here we will authorize you');
     const request = context.switchToHttp().getRequest();
     // rawHeaders
@@ -41,7 +36,7 @@ export class AuthGuard implements CanActivate {
       /* set status is 401 */
       return false;
     }
-    token = token.substring(0, 6);
+    token = token.substring(6).trim();
     let authTokenPayload: RefreshTokenPayload;
     let tokenSetting = TokenSetting.getInstance();
     let jwtSignOption: JwtSignOptions = {
@@ -49,8 +44,12 @@ export class AuthGuard implements CanActivate {
       algorithm: 'HS256',
       expiresIn: tokenSetting.accessExp,
     };
+
     try {
-      authTokenPayload = this.jwtService.verify(token, jwtSignOption);
+      authTokenPayload = await this.jwtService.verifyAsync(
+        token,
+        jwtSignOption,
+      );
     } catch (ex) {
       console.log(ex);
       // throw new BadCredentialException(BadUserCredential);
@@ -65,10 +64,11 @@ export class AuthGuard implements CanActivate {
     if (!authTokenPayload.refreshUUID.startsWith('(A)')) {
       return false;
     }
-    let isAvailableAccess: Boolean = true;
-    this.sessionService
-      .isAvailableAccess(authTokenPayload.id, authTokenPayload.refreshUUID)
-      .then((e) => (isAvailableAccess = e));
+    let refreshUUID = authTokenPayload.refreshUUID.substring(3);
+    let isAvailableAccess = await this.sessionService.isAvailableAccess(
+      authTokenPayload.id,
+      refreshUUID,
+    );
 
     return isAvailableAccess.valueOf();
   }

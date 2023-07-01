@@ -13,8 +13,10 @@ async function bootstrap() {
   tokenSetting.secretKey = configService.get('security.jwt.secretKey');
   tokenSetting.refreshExp = configService.get('security.jwt.refreshExp');
   tokenSetting.accessExp = configService.get('security.jwt.accessExp');
+  const PORT = configService.get('http.port');
+  console.log(`The Service is running in PORT: ${PORT}`);
   app.setGlobalPrefix('api');
   app.enableCors();
-  await app.listen(8080);
+  await app.listen(PORT | 8080);
 }
 bootstrap();
