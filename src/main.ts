@@ -10,7 +10,7 @@ async function bootstrap() {
   const ignoreUrl = IgnoreTokenCheckUrlCollection.getInstance();
   ignoreUrl.urls = configService.get('ignoreTokenCheckUrls');
   const tokenSetting = TokenSetting.getInstance();
-  tokenSetting.secretKey = configService.get('security.jwt.secretKey');
+  tokenSetting.secretKey = configService.get('security.jwt.random');
   tokenSetting.refreshExp = configService.get('security.jwt.refreshExp');
   tokenSetting.accessExp = configService.get('security.jwt.accessExp');
   const PORT = configService.get('http.port');
