@@ -9,7 +9,7 @@ security:
     # refresh token expired in 10d
     refreshExp: 864000000
     # secret key, random string
-    secretKey: PLkz1SCf5iB4cAum3esWdyv_FFPBHTnvRY
+    random: PLkz1SCf5iB4cAum3esWdyv_FFPBHTnvRY
 
 ignoreTokenCheckUrls: 
   - /api
