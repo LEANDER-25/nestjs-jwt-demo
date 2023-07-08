@@ -7,11 +7,13 @@ class UserDto {
 class UserInfoDto extends UserDto {
   fullname?: string;
   age?: number;
+  phone?: string;
+  email?: string;
 }
 
 class UserLoginSuccess {
   refreshToken?: string;
-  accessToken?: string
+  accessToken?: string;
 }
 
 class UserTokenPayload extends UserDto {
@@ -19,7 +21,13 @@ class UserTokenPayload extends UserDto {
 }
 
 class RefreshTokenPayload extends UserTokenPayload {
-  refreshUUID: string
+  refreshUUID: string;
 }
 
-export { UserDto, UserInfoDto, UserLoginSuccess, UserTokenPayload, RefreshTokenPayload };
+export {
+  UserDto,
+  UserInfoDto,
+  UserLoginSuccess,
+  UserTokenPayload,
+  RefreshTokenPayload,
+};
