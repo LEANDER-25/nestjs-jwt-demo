@@ -66,9 +66,17 @@ export class AuthService extends AbstractService {
   async register(payload: UserRegister): Promise<UserInfoDto> {
     let username = payload.username;
     let password = payload.password;
-    let { age, assistRoles, mainRole } = payload;
+    let { birth, assistRoles, mainRole } = payload;
 
-    if (age < 0) {
+    let birthDate = new Date(birth);
+
+    let [year, month, day] = [
+      birthDate.getFullYear(),
+      birthDate.getMonth(),
+      birthDate.getDate(),
+    ];
+
+    if (year < 0) {
       throw new BadRequestException(AgeNotAvailable);
     }
 
@@ -91,9 +99,11 @@ export class AuthService extends AbstractService {
 
     assignedRoles = await this.getAssistRoles(assistRoles, assignedRoles);
 
+    let birthDateStr = year + '-' + month + '-' + day;
+
     let newUserInfo: UserInfo = {
       user: newUser,
-      age,
+      birth: birthDateStr,
       fullname: '',
     };
     newUserInfo = await this.userInfoRepository.save(newUserInfo);
@@ -106,7 +116,7 @@ export class AuthService extends AbstractService {
 
     let userInfoResponse: UserInfoDto = {
       id: newUser.id,
-      age: newUserInfo.age,
+      birth: newUserInfo.birth,
       username: newUser.username,
       roles: roles,
     };

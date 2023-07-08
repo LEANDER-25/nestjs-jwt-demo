@@ -42,6 +42,7 @@ import { UserRoleRepository } from './repository/user-role.repository';
       }),
       dataSourceFactory: async (options) => {
         const dataSource = await new DataSource(options).initialize();
+        console.log(`Connect to DB: ${dataSource.isInitialized}`);
         return dataSource;
       },
     }),

@@ -6,7 +6,7 @@ class UserDto {
 
 class UserInfoDto extends UserDto {
   fullname?: string;
-  age?: number;
+  birth?: string;
   phone?: string;
   email?: string;
 }

@@ -4,7 +4,7 @@ class UserLogin {
 }
 
 class UserRegister extends UserLogin {
-  age?: number;
+  birth?: string;
   assistRoles: string[];
   mainRole: string;
 }
