@@ -16,3 +16,5 @@ ignoreTokenCheckUrls:
   - /api/auth/login
   - /api/auth/logout
   - /api/auth/register
+  - /api/auth/re-gen
+  - /api/auth/verify-access-token

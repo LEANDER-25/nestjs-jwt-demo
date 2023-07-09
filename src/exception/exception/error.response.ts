@@ -115,6 +115,13 @@ const AccountIsDisabled: ErrorResponse = {
   type: EXCEPTION[EXCEPTION.BAD_REQUEST],
 };
 
+const RevokeAccessRightError: ErrorResponse = {
+  message: 'Cannot revoke access right of the token',
+  errorCode: '0008',
+  description: 'Cannot revoke access right of the token by some unknown errors',
+  type: EXCEPTION[EXCEPTION.INTERNAL_SERVER_ERROR],
+};
+
 export {
   ErrorResponse,
   BadUserCredential,
@@ -131,5 +138,6 @@ export {
   PasswordContainingIllegalChar,
   RoleTypeNotFound,
   PayloadEmpty,
-  AccountIsDisabled
+  AccountIsDisabled,
+  RevokeAccessRightError
 };

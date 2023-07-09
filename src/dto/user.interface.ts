@@ -11,17 +11,22 @@ class UserInfoDto extends UserDto {
   email?: string;
 }
 
-class UserLoginSuccess {
-  refreshToken?: string;
-  accessToken?: string;
-}
-
 class UserTokenPayload extends UserDto {
   mainRole: string;
 }
 
+class UserLoginSuccess extends UserTokenPayload {
+  refreshToken?: string;
+  accessToken?: string;
+}
+
 class RefreshTokenPayload extends UserTokenPayload {
   refreshUUID: string;
+  kindToken: string
+}
+
+class AccessibleResult {
+  access: boolean
 }
 
 export {
@@ -30,4 +35,5 @@ export {
   UserLoginSuccess,
   UserTokenPayload,
   RefreshTokenPayload,
+  AccessibleResult
 };

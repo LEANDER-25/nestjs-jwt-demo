@@ -22,6 +22,7 @@ import { UserSessionRepository } from './repository/user-session.repository';
 import { RoleRepository } from './repository/role.repository';
 import { UserInfoRepository } from './repository/user-info.repository';
 import { UserRoleRepository } from './repository/user-role.repository';
+import { AuthService } from './service/auth/auth.service';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { UserRoleRepository } from './repository/user-role.repository';
     RoleRepository,
     JwtService,
     SessionService,
+    AuthService,
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
@@ -67,6 +69,6 @@ import { UserRoleRepository } from './repository/user-role.repository';
       provide: APP_GUARD,
       useClass: AuthGuard,
     },
-  ]
+  ],
 })
 export class AppModule {}

@@ -6,9 +6,15 @@ export abstract class AbstractService {
   constructor(protected configService: ConfigService) {}
   readonly tokenSetting = TokenSetting.getInstance();
   getJwtSignOption(isRefresh: boolean): JwtSignOptions {
+    let algorithm;
+    if (isRefresh) {
+      algorithm = 'HS512' as const;
+    } else {
+      algorithm = 'HS256' as const;
+    }
     let jwtSignOption: JwtSignOptions = {
       secret: this.tokenSetting.secretKey,
-      algorithm: 'HS256',
+      algorithm,
     };
     return {
       ...jwtSignOption,

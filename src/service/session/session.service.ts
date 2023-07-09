@@ -38,6 +38,7 @@ export class SessionService {
         isExpired: false,
       },
     });
+    
     return CollectionUtils.isNotEmpty(sessions);
   }
 

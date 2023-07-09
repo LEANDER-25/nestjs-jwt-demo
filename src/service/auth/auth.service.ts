@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import {
+  AccessibleResult,
   RefreshTokenPayload,
   UserInfoDto,
   UserLoginSuccess,
@@ -31,6 +32,7 @@ import {
   PasswordMissingLowerCase,
   PasswordMissingUpperCase,
   PayloadEmpty,
+  RevokeAccessRightError,
   RoleTypeNotFound,
   UsernameContainingIllegalChar,
   UsernameIsEmpty,
@@ -48,6 +50,8 @@ import { UserRepository } from 'src/repository/user.repository';
 import { UserInfoRepository } from 'src/repository/user-info.repository';
 import { RoleRepository } from 'src/repository/role.repository';
 import { UserRoleRepository } from 'src/repository/user-role.repository';
+import { TOKEN_KIND } from 'src/common/constant';
+import { TokenSetting } from 'src/config/token.setting';
 
 @Injectable()
 export class AuthService extends AbstractService {
@@ -244,12 +248,32 @@ export class AuthService extends AbstractService {
       throw new BadCredentialException(BadUserCredential);
     }
 
+    return await this.generateAccess(user);
+  }
+
+  async reGenToken(refreshToken: string): Promise<UserLoginSuccess> {
+    let isValidToken = await this.verifyToken(refreshToken, false);
+    if (!isValidToken) {
+      throw new BadCredentialException(BadUserCredential);
+    }
+    let payload = await this.extractToken(refreshToken, false);
+    let user = await this.userRepository.findOne({ where: { id: payload.id } });
+    let revokeAccessRight = await this.sessionService.revokeAccessRight(
+      payload.refreshUUID,
+    );
+    if (!revokeAccessRight) {
+      throw new InternalServerErrorException(RevokeAccessRightError);
+    }
+    return await this.generateAccess(user);
+  }
+
+  protected async generateAccess(user: User): Promise<UserLoginSuccess> {
     if (!user.isActive) {
       throw new ForbiddenException(AccountIsDisabled);
     }
 
     let userRoles = await this.userRoleRepository.find({
-      where: { username: payload.username },
+      where: { username: user.username },
     });
 
     if (CollectionUtils.isEmpty(userRoles)) {
@@ -278,11 +302,13 @@ export class AuthService extends AbstractService {
     let accessTokenPayload: RefreshTokenPayload = {
       ...userToken,
       refreshUUID: '(A)' + refreshUUID,
+      kindToken: TOKEN_KIND.ACCESS_TOKEN,
     };
 
     let refreshTokenPayload: RefreshTokenPayload = {
       ...userToken,
       refreshUUID,
+      kindToken: TOKEN_KIND.REFRESH_TOKEN,
     };
     let refreshTokenSignOption: JwtSignOptions = this.getJwtSignOption(true);
 
@@ -316,6 +342,116 @@ export class AuthService extends AbstractService {
     if (StringUtils.isEmpty(payload.password)) {
       throw new BadRequestException(PasswordIsEmpty);
     }
+  }
+
+  async extractToken(
+    token: string,
+    isAccessToken: boolean,
+  ): Promise<RefreshTokenPayload> {
+    if (StringUtils.isEmpty(token) || !token.startsWith('Bearer')) {
+      /* set status is 401 */
+      return null;
+    }
+    token = token.substring(6).trim();
+    let authTokenPayload: RefreshTokenPayload;
+    let tokenSetting = TokenSetting.getInstance();
+    let algorithm;
+    if (isAccessToken) {
+      algorithm = 'HS256' as const;
+    } else {
+      algorithm = 'HS512' as const;
+    }
+    let expiresIn: string;
+    if (isAccessToken) {
+      expiresIn = tokenSetting.accessExp;
+    } else {
+      expiresIn = tokenSetting.refreshExp;
+    }
+    let jwtSignOption: JwtSignOptions = {
+      secret: tokenSetting.secretKey,
+      algorithm,
+      expiresIn,
+    };
+
+    try {
+      authTokenPayload = await this.jwtService.verifyAsync(
+        token,
+        jwtSignOption,
+      );
+      return authTokenPayload;
+    } catch (ex) {
+      console.log(ex);
+      // throw new BadCredentialException(BadUserCredential);
+      return null;
+    }
+  }
+
+  async verifyToken(token: string, isAccessToken: boolean): Promise<boolean> {
+    let authTokenPayload: RefreshTokenPayload = await this.extractToken(
+      token,
+      isAccessToken,
+    );
+
+    /* check payload empty? */
+    if (!authTokenPayload) {
+      return false;
+    }
+
+    console.log(authTokenPayload);
+
+    /* check kind of token */
+    if (
+      isAccessToken &&
+      TOKEN_KIND.ACCESS_TOKEN != authTokenPayload.kindToken
+    ) {
+      return false;
+    }
+
+    if (
+      !isAccessToken &&
+      TOKEN_KIND.REFRESH_TOKEN != authTokenPayload.kindToken
+    ) {
+      return false;
+    }
+
+    /* check token identify key */
+    let tokenIdentifyKey = authTokenPayload.refreshUUID;
+    if (StringUtils.isEmpty(tokenIdentifyKey)) {
+      return false;
+    }
+
+    if (isAccessToken && !tokenIdentifyKey.startsWith('(A)')) {
+      return false;
+    }
+
+    tokenIdentifyKey = isAccessToken
+      ? tokenIdentifyKey.substring(3)
+      : tokenIdentifyKey;
+
+    console.log(tokenIdentifyKey);
+
+    let isAvailableAccess = await this.sessionService.isAvailableAccess(
+      authTokenPayload.id,
+      tokenIdentifyKey,
+    );
+
+    return isAvailableAccess.valueOf();
+  }
+
+  async verifyAccessToken(token: string): Promise<boolean> {
+    return await this.verifyToken(token, true);
+  }
+
+  async verifyAccessTokenWithAccessResult(
+    token: string,
+  ): Promise<AccessibleResult> {
+    let access = await this.verifyAccessToken(token);
+    if (!access) {
+      throw new BadCredentialException(BadUserCredential);
+    }
+    return {
+      access,
+    };
   }
 
   async logout(payload: LogOutDto) {

@@ -1,5 +1,9 @@
 import { Body, Controller, Post, Headers, HttpCode } from '@nestjs/common';
-import { UserInfoDto, UserLoginSuccess } from 'src/dto/user.interface';
+import {
+  AccessibleResult,
+  UserInfoDto,
+  UserLoginSuccess,
+} from 'src/dto/user.interface';
 import { UserLogin, UserRegister } from 'src/dto/user.request.interface';
 import { AbstractResponse } from 'src/response/abstract-response.interface';
 import { AuthService } from 'src/service/auth/auth.service';
@@ -19,10 +23,34 @@ export class AuthController {
   }
 
   @Post('login')
+  @HttpCode(200)
   async login(
     @Body() payload: UserLogin,
   ): Promise<AbstractResponse<UserLoginSuccess>> {
     let refreshAccessToken = await this.authService.login(payload);
+    return {
+      data: refreshAccessToken,
+    };
+  }
+
+  @Post('verify-access-token')
+  @HttpCode(200)
+  async verifyToken(
+    @Headers('Authorization') accessToken: string,
+  ): Promise<AbstractResponse<AccessibleResult>> {
+    let data = await this.authService.verifyAccessTokenWithAccessResult(
+      accessToken,
+    );
+    return {
+      data,
+    };
+  }
+
+  @Post('re-gen')
+  async reGenToken(
+    @Headers('Authorization') refreshToken: string,
+  ): Promise<AbstractResponse<UserLoginSuccess>> {
+    let refreshAccessToken = await this.authService.reGenToken(refreshToken);
     return {
       data: refreshAccessToken,
     };
