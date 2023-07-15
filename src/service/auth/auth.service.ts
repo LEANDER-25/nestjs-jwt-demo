@@ -34,6 +34,7 @@ import {
   PayloadEmpty,
   RevokeAccessRightError,
   RoleTypeNotFound,
+  UsernameAsResigterExisted,
   UsernameContainingIllegalChar,
   UsernameIsEmpty,
   UsernameLengthIssue,
@@ -192,7 +193,7 @@ export class AuthService extends AbstractService {
     return assignedRoles.concat(roleList);
   }
 
-  protected checkUsername(username: string) {
+  protected async checkUsername(username: string) {
     if (StringUtils.isEmpty(username)) {
       throw new BadRequestException(UsernameIsEmpty);
     }
@@ -206,6 +207,11 @@ export class AuthService extends AbstractService {
     }
     if (!username.match('^[^_.]+$')) {
       throw new BadRequestException(UsernameContainingIllegalChar);
+    }
+
+    let existUser = await this.userRepository.find({where: {username}});
+    if (ObjectUtils.isNull(existUser)) {
+      throw new BadRequestException(UsernameAsResigterExisted);
     }
   }
 
