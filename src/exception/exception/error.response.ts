@@ -122,6 +122,13 @@ const RevokeAccessRightError: ErrorResponse = {
   type: EXCEPTION[EXCEPTION.INTERNAL_SERVER_ERROR],
 };
 
+const UsernameAsResigterExisted: ErrorResponse = {
+  message: 'Username is used',
+  errorCode: '0008',
+  description: 'Cannot register for this username because it is used in another account',
+  type: EXCEPTION[EXCEPTION.BAD_REQUEST],
+};
+
 export {
   ErrorResponse,
   BadUserCredential,
@@ -139,5 +146,6 @@ export {
   RoleTypeNotFound,
   PayloadEmpty,
   AccountIsDisabled,
-  RevokeAccessRightError
+  RevokeAccessRightError,
+  UsernameAsResigterExisted
 };
