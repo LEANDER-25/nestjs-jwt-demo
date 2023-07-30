@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import {
   AccessibleResult,
   RefreshTokenPayload,
@@ -81,12 +81,19 @@ export class AuthService extends AbstractService {
       birthDate.getDate(),
     ];
 
+    let birthDateStr = '';
+
     if (year < 0) {
       throw new BadRequestException(AgeNotAvailable);
     }
 
-    this.checkUsername(username);
-    this.checkPassword(password);
+    if (year && 0 != year || month && 0 != month || day && 0 != day) {
+      birthDateStr = year + '-' + month + '-' + day;
+    }
+
+
+    await this.checkUsername(username);
+    await this.checkPassword(password);
 
     let salt = 12;
     password = await bcrypt.hash(password, salt);
@@ -103,8 +110,6 @@ export class AuthService extends AbstractService {
     mainRole = assignedRoles[0].roleName;
 
     assignedRoles = await this.getAssistRoles(assistRoles, assignedRoles);
-
-    let birthDateStr = year + '-' + month + '-' + day;
 
     let newUserInfo: UserInfo = {
       user: newUser,
@@ -205,11 +210,11 @@ export class AuthService extends AbstractService {
     if (username.length > 16 || username.length <= 3) {
       throw new BadRequestException(UsernameLengthIssue);
     }
-    if (!username.match('^[^_.]+$')) {
+    if (!username.match('^[^ _.]+$')) {
       throw new BadRequestException(UsernameContainingIllegalChar);
     }
 
-    let existUser = await this.userRepository.find({where: {username}});
+    let existUser = await this.userRepository.find({ where: { username } });
     if (ObjectUtils.isNull(existUser)) {
       throw new BadRequestException(UsernameAsResigterExisted);
     }
